@@ -1,0 +1,4 @@
+node_modules
+yarn-error.log
+src/css/.sass-cache/
+test/.sass-cache/
