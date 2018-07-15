@@ -1,0 +1,17 @@
+{
+  "name": "scalejs",
+  "version": "0.0.1",
+  "description": "a simple module form scaling dom elements",
+  "main": "src/scale.js",
+  "repository": "/",
+  "author": "spti",
+  "license": "MIT",
+  "private": false,
+  "devDependencies": {
+    "gulp": "^3.9.1",
+    "gulp-concat": "^2.6.1",
+    "gulp-sass": "^4.0.1",
+    "webpack": "^4.16.0",
+    "webpack-cli": "^3.0.8"
+  }
+}
