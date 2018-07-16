@@ -4,6 +4,10 @@
   "description": "a simple module form scaling dom elements",
   "main": "src/scale.js",
   "repository": "/",
+  "scripts": {
+    "build-test": "gulp build && gulp build-test && webpack --config webpack.config.js",
+    "build": "gulp build"
+  },
   "author": "spti",
   "license": "MIT",
   "private": false,
