@@ -39,7 +39,7 @@ Scale.prototype.doScale = function(target, scaledUp) {
   // update our rects data, in case of anything
   this.rects = this.domIo.getRects(this.el)
   const vprtDims = this.domIo.getViewportDims()
-  this.transforms = this.core.calculateTransform(this.transforms, this.rects, vprtDims, target)
+  this.transforms = this.core.calculateTransform(target, this.transforms, this.rects, vprtDims)
 
   const self = this
   function trnsnEndCb() {
