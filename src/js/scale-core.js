@@ -5,12 +5,16 @@ function ScaleCore() {
 ScaleCore.prototype.calculateTransform = function(target, transforms, rects, parent) {
 
   // project, what rects of el would look like after it's scaled
-  const rectsProjected = this.projectRects(target, transforms, rects)
+  const rectsProjected = this.projectRects(target, rects, transforms)
 
   // adjust the el's translation to fit it in it's container nicely
-  const transformsBounded = this.encounterBounds(transforms, rects, parent)
+  const transformsNew = this.encounterBounds(transforms, rectsProjected, parent)
 
-  return transformsBounded
+  // update the data
+  transformsNew.scaleX = target
+  transformsNew.scaleY = target
+
+  return transformsNew
 }
 
 ScaleCore.prototype.projectRects = function(target, rects, transforms) {
@@ -86,43 +90,6 @@ ScaleCore.prototype.encounterBounds = function(transforms, rects, parent) {
   return transformsNew;
   //this.element.css( 'transform', 'matrix(' + coords.scaleX + ', 0, 0, ' + coords.scaleY +  ', ' + x.newPos + ', ' + y.newPos + ')' );
 
-}
-
-ScaleCore.prototype.calculateTransform = function(transforms, rects, containerDims, target) {
-
-  const transformsNew = {}
-  Object.assign(transformsNew, transforms)
-
-  // this.coordinates.rects = this.el.getBoundingClientRect();
-
-  // figure out the dimensions for the element to obtain after scaling:
-  var ratio = target / transforms.scaleX;
-
-  // we make projection of the future scaled element...
-  const transformsProjected = {
-    rects: {
-      left: (rects.left + rects.width / 2) - (transforms.originX * target),
-      top: (rects.top + rects.height / 2) - (transforms.originY * target),
-      width: rects.width * ratio,
-      height: rects.height * ratio
-    },
-    // if we'd work with changing origin, these values in transforms would be altered by scaleStart.
-    // in our case, however, these remain the same as they were left after the previous scaling of the element.
-    translateX: transforms.translateX,
-    translateY: transforms.translateY
-  }
-
-  // ... to see, if it would overflow the borders of the viewport, and, if so,
-  // adjust the translation to avoid that
-  var transformsBounded = this.encounterBounds(transformsProjected, containerDims);
-
-  // set the values that the matrix of the element should have
-  transformsNew.translateX = transformsBounded.translateX
-  transformsNew.translateY = transformsBounded.translateY
-  transformsNew.scaleX = target
-  transformsNew.scaleY = target
-
-  return transformsNew
 }
 
 export {ScaleCore}
