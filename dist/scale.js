@@ -50,10 +50,22 @@ function ScaleCore() {
 
 }
 
-ScaleCore.prototype.calculateTransform = function(transforms, rects, containerDims, target) {
+ScaleCore.prototype.calculateTransform = function(target, transforms, rects, parent) {
 
-  const transformsNew = {}
-  Object.assign(transformsNew, transforms)
+  // project, what rects of el would look like after it's scaled
+  const rectsProjected = this.projectRects(target, rects, transforms)
+
+  // adjust the el's translation to fit it in it's container nicely
+  const transformsNew = this.encounterBounds(transforms, rectsProjected, parent)
+
+  // update the data
+  transformsNew.scaleX = target
+  transformsNew.scaleY = target
+
+  return transformsNew
+}
+
+ScaleCore.prototype.projectRects = function(target, rects, transforms) {
 
   // this.coordinates.rects = this.el.getBoundingClientRect();
 
@@ -61,46 +73,31 @@ ScaleCore.prototype.calculateTransform = function(transforms, rects, containerDi
   var ratio = target / transforms.scaleX;
 
   // we make projection of the future scaled element...
-  const transformsProjected = {
-    rects: {
-      left: (rects.left + rects.width / 2) - (transforms.originX * target),
-      top: (rects.top + rects.height / 2) - (transforms.originY * target),
-      width: rects.width * ratio,
-      height: rects.height * ratio
-    },
-    // if we'd work with changing origin, these values in transforms would be altered by scaleStart.
-    // in our case, however, these remain the same as they were left after the previous scaling of the element.
-    translateX: transforms.translateX,
-    translateY: transforms.translateY
+  const rectsProjected = {
+    left: (rects.left + rects.width / 2) - (transforms.originX * target),
+    top: (rects.top + rects.height / 2) - (transforms.originY * target),
+    width: rects.width * ratio,
+    height: rects.height * ratio
   }
 
-  // ... to see, if it would overflow the borders of the viewport, and, if so,
-  // adjust the translation to avoid that
-  var transformsBounded = this.encounterBounds(transformsProjected, containerDims);
-
-  // set the values that the matrix of the element should have
-  transformsNew.translateX = transformsBounded.translateX
-  transformsNew.translateY = transformsBounded.translateY
-  transformsNew.scaleX = target
-  transformsNew.scaleY = target
-
-  return transformsNew
+  return rectsProjected
 }
 
-ScaleCore.prototype.encounterBounds = function(coords, containerDims) {
+ScaleCore.prototype.encounterBounds = function(transforms, rects, parent) {
 
+  console.log("encounterBounds", arguments)
   var array = [
     {
-      length: coords.rects.width,
-      pos: coords.rects.left,
-      translation: coords.translateX,
-      parent: containerDims.width // parseInt(getViewportWidth())
+      length: rects.width,
+      pos: rects.left,
+      translation: transforms.translateX,
+      parent: parent.width // parseInt(getViewportWidth())
     },
     {
-      length: coords.rects.height,
-      pos: coords.rects.top,
-      translation: coords.translateY,
-      parent: containerDims.height // parseInt(getViewportHeight())
+      length: rects.height,
+      pos: rects.top,
+      translation: transforms.translateY,
+      parent: parent.height // parseInt(getViewportHeight())
     }
   ]
 
@@ -110,14 +107,14 @@ ScaleCore.prototype.encounterBounds = function(coords, containerDims) {
     array[i].newPos = (typeof(temp) === 'number') ? temp : array[i].translation;
   }
 
-  const coordsNew = {}
+  const transformsNew = {}
 
   // Object.assign is es6, but there's a polyfill, in case of anything:
   // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/assign
-  Object.assign(coordsNew, coords)
+  Object.assign(transformsNew, transforms)
 
-  coordsNew.translateX = array[0].newPos;
-  coordsNew.translateY = array[1].newPos;
+  transformsNew.translateX = array[0].newPos;
+  transformsNew.translateY = array[1].newPos;
 
   function process(axis) {
 
@@ -139,7 +136,7 @@ ScaleCore.prototype.encounterBounds = function(coords, containerDims) {
     return false;
   }
 
-  return coordsNew;
+  return transformsNew;
   //this.element.css( 'transform', 'matrix(' + coords.scaleX + ', 0, 0, ' + coords.scaleY +  ', ' + x.newPos + ', ' + y.newPos + ')' );
 
 }
@@ -152,7 +149,7 @@ const ScaleCore = {
     return ScaleCoreCapsule()
   }
 }
- 
+
 // export {ScaleCoreCapsule}
 */
 
@@ -270,7 +267,7 @@ Scale.prototype.doScale = function(target, scaledUp) {
   // update our rects data, in case of anything
   this.rects = this.domIo.getRects(this.el)
   const vprtDims = this.domIo.getViewportDims()
-  this.transforms = this.core.calculateTransform(this.transforms, this.rects, vprtDims, target)
+  this.transforms = this.core.calculateTransform(target, this.transforms, this.rects, vprtDims)
 
   const self = this
   function trnsnEndCb() {
