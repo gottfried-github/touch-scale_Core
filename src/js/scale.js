@@ -23,48 +23,86 @@ function Scale(el, options) {
   this.domIo.initializeElementsMatrix(this.el)
 
   this.transforms = this.domIo.getTransforms(this.el)
+  this.origin = this.domIo.getOrigin(this.el)
   this.rects = this.domIo.getRects(this.el)
 }
 
-Scale.prototype.scaleUp = function() {
-  this.doScale(this.scaleFactor, true)
+Scale.prototype.scaleStart = function(gesture) {
+
+  const coords = this.core.initializeMovement(gesture, this.transforms, this.rects)
+  this.transforms.translate = coords.translate
+  this.origin = coords.origin
+
+  this.domIo.setMatrix(this.transforms)
+  this.domIo.setOrigin(this.origin)
+
+  // this.transforms = this.core.handleOriginChange()
+  // this.anchor = this.core.setAnchor(this.transforms, this.ev.center)
 }
 
-Scale.prototype.scaleDown = function() {
-  this.doScale(1, false)
+Scale.prototype.scaleMove = function(gesture) {
+  this.transforms = this.core.calculateDiscretePoint(gesture, this.transforms)
 }
 
-Scale.prototype.doScale = function(target, scaledUp) {
+Scale.prototype.scaleStop = function(gesture) {
 
-  // update our rects data, in case of anything
+  this.transforms = this.core.finishMovement(gesture, this.transforms)
   this.rects = this.domIo.getRects(this.el)
-  const vprtDims = this.domIo.getViewportDims()
-  this.transforms = this.core.calculateTransform(target, this.transforms, this.rects, vprtDims)
 
-  const self = this
-  function trnsnEndCb() {
-    self.el.removeEventListener("transitionend", trnsnEndCb)
-    self.el.classList.remove(self.transitionClass)
+  // see, if el exceeds parent's area in an ugly way
+  const transformsBounded = this.encounterBounds(this.transforms, this.rects, vprtDims)
 
-    self.rects = self.domIo.getRects(self.el)
-    self.scaledUp = scaledUp
-
-    if (self.options.afterScale)
-      self.options.afterScale(self.el);
+  if (
+    transformsBounded.translateX != this.transforms.translateX
+    || transformsBounded.translateY != this.transforms.translateY
+  ) {
+    this.tweenIn()
   }
-
-  this.el.addEventListener('transitionend', trnsnEndCb)
-
-  if (this.options.beforeScale)
-    this.options.beforeScale(this.rects)
-
-  this.el.classList.add(this.transitionClass)
-  this.domIo.setMatrix(this.el, this.transforms)
 }
 
 Scale.prototype.updateTransformData = function(transforms) {
   this.transforms = Object.assign(this.transforms, transforms)
 }
+
+Scale.prototype.rAf = function() {
+  var rafId = 0
+  rafCb = function() {
+
+    const rafIdPrev = rafId
+    rafId = window.requestAnimationFrame(() => {
+
+      // prevent multiple simultaneuos rAfs
+      if (rafId == rafIdPrev) return
+
+      // do our animation
+
+      const val = this.range.getNext()
+      this.transforms.translateX = val
+      this.transforms.translateY = val
+      rafCb()
+    })
+  }
+}
+
+Scale.prototype.tweenIn = function() {
+
+    var value = new Range(
+      // length of the range
+      transformsBound.translateX - this.transforms.translateX,
+
+      // points to go from and to
+      {
+        from: this.transforms.translateY,
+        to: transformsBound.translateY
+      },
+
+      // current position
+      this.transforms.translateX
+    )
+
+  }
+}
+
 
 export {Scale}
 

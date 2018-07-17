@@ -1,3 +1,7 @@
+The Scale module is abstracted away from any particular touch event library, although it is inspired by the hammer pinch event. I tried to slice the whole thing into real core stuff:
+  * the very calculations, needed to map the gesture onto element's movement are separated from dealing with the dom.
+
+
 A simple, (extensible) module for scaling dom elements.
 
 # Features:

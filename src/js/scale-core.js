@@ -2,37 +2,84 @@ function ScaleCore() {
 
 }
 
-ScaleCore.prototype.calculateTransform = function(target, transforms, rects, parent) {
+ScaleCore.prototype.initializeMovement = function(gesture, transforms) {
 
-  // project, what rects of el would look like after it's scaled
-  const rectsProjected = this.projectRects(target, rects, transforms)
+  /*
+  initialize the occuring gesture:
+  */
 
-  // adjust the el's translation to fit it in it's container nicely
-  const transformsNew = this.encounterBounds(transforms, rectsProjected, parent)
+  // capture the initial coordinates of ev and el
+  this.anchor.center = gesture.center
+  this.anchor.translate = transforms.translate
 
-  // update the data
-  transformsNew.scaleX = target
-  transformsNew.scaleY = target
+  // map ev's position to the appropriate (proper) transform-origin value (which is always in scale of 1)
+  // (map ev's position onto the el's matrix)
+  const origin = this.mapToOrigin(gesture.center, transforms, rects)
+
+  // annigilate shifting of the element on origin change
+  const translate = this.annigilateShift()
+
+  return {
+    translate: transforms.translate,
+    origin: origin
+  }
+}
+
+// calculate a discrete point in the move
+ScaleCore.prototype.calculateDiscretePoint = function(gesture, transforms) {
+
+  const scale = {}
+  const translate = {}
+
+  scale.x = this.anchor.scale.x * gesture.scale;
+  scale.y = this.anchor.scale.y * gesture.scale;
+
+  // transforms.scaleX = this.anchor.scaleX * gesture.scale;
+  // transforms.scaleY = this.anchor.scaleY * gesture.scale;
+
+  translate.x = this.anchor.translate.x + (gesture.center.x - this.anchor.gestureCenter.x);
+  translate.y = this.anchor.translate.y + (gesture.center.y - this.anchor.gestureCenter.y);
+
+  return {
+    scale: scale,
+    traslate: translate
+  }
+}
+
+ScaleCore.prototype.finishMovement = function(gesture, transforms) {
+
+  const transformsNew = this.calculateDiscretePoint(gesture, transforms)
+
+  // anchor the scale value, to use as point of departure in next movement
+  this.anchor.scale = transformsNew.scale
 
   return transformsNew
 }
 
-ScaleCore.prototype.projectRects = function(target, rects, transforms) {
-
-  // this.coordinates.rects = this.el.getBoundingClientRect();
-
-  // figure out the dimensions for the element to obtain after scaling:
-  var ratio = target / transforms.scaleX;
-
-  // we make projection of the future scaled element...
-  const rectsProjected = {
-    left: (rects.left + rects.width / 2) - (transforms.originX * target),
-    top: (rects.top + rects.height / 2) - (transforms.originY * target),
-    width: rects.width * ratio,
-    height: rects.height * ratio
+ScaleCore.prototype.mapToOrigin = function(gestureCenter, transforms, rects) {
+  // determine point's position, relative to the scalable element
+  const pointPosWithinEl = {
+    left: gestureCenter.x - rects.left,
+    top: gestureCenter.y - rects.top
   }
 
-  return rectsProjected
+  // map point's position to the appropriate (proper) transform-origin value (which is always in scale of 1)
+  const origin = {
+    x: pointPosWithinEl.left / transforms.scale.x,
+    y: pointPosWithinEl.top / transforms.scale.y
+  }
+
+  return origin
+}
+
+ScaleCore.prototype.annigilateShift = function(origin, transforms) {
+
+  const translate = {
+    x: ((origin.x - 150) * transforms.scaleX - (origin.x - 150)); //  + transforms.offset.x
+    y: ((origin.y - 150) * transforms.scaleY - (origin.y - 150)); //  + transforms.offset.y
+  }
+
+  return translate
 }
 
 ScaleCore.prototype.encounterBounds = function(transforms, rects, parent) {

@@ -1,33 +1,42 @@
 function ScaleDomIo() {}
 
-ScaleDomIo.prototype.initializeElementsMatrix = function(el) {
-  // set the initial value of transform to matrix;
-  const matrixStr = 'matrix(1, 0, 0, 1, 0, 0)'
+ScaleDomIo.prototype.getOrigin = function(el) {
+  const originData = window.getComputedStyle(el)['transform-origin'].split(' ')
 
-  this.doSetMatrix(el, matrixStr)
+  const origin = {
+    x: parseInt(originData[0]),
+    y: parseInt(originData[1])
+  }
+
+  return origin
 }
 
 ScaleDomIo.prototype.getTransforms = function(el) {
-  // get the initial value of the origin
-  const origin = window.getComputedStyle(el)['transform-origin'].split(' ')
+  const transforms = {}
+  const transformsData = el.style.transform.split('(')[1].split(')')[0].split(',');
 
-  return {
-    // rects: this.el.getBoundingClientRect(),
-    scaleX: 1,
-    scaleY: 1,
-    originX: parseInt(origin[0]),
-    originY: parseInt(origin[1]),
-    translateX: 0,
-    translateY: 0
-      // offset: {
-      //   x: 0,
-      //   y: 0
-      // }
+  transforms.scale = {
+    x: parseFloat(transformsData[0])
+    y: parseFloat(transformsData[3])
   }
+
+  transforms.translate = {
+    x: parseFloat(transformsData[4])
+    y: parseFloat(transformsData[5])
+  }
+
+  return transforms
 }
 
 ScaleDomIo.prototype.getRects = function(el) {
   return el.getBoundingClientRect()
+}
+
+ScaleDomIo.prototype.getViewportDims = function() {
+  return {
+    width: getViewportWidth(),
+    height: getViewportHeight()
+  }
 }
 
 ScaleDomIo.prototype.setMatrix = function(el, transforms) {
@@ -51,11 +60,10 @@ ScaleDomIo.prototype.doSetMatrix = function(el, matrixStr) {
   el.style.transform = matrixStr
 }
 
-ScaleDomIo.prototype.getViewportDims = function() {
-  return {
-    width: getViewportWidth(),
-    height: getViewportHeight()
-  }
+ScaleDomIo.prototype.initializeElementsMatrix = function(el) {
+  // set the initial value of transform to matrix;
+  const matrixStr = 'matrix(1, 0, 0, 1, 0, 0)'
+  this.doSetMatrix(el, matrixStr)
 }
 
 export {ScaleDomIo}
