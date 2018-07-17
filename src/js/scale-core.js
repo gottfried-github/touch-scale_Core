@@ -75,8 +75,8 @@ ScaleCore.prototype.mapToOrigin = function(gestureCenter, transforms, rects) {
 ScaleCore.prototype.annigilateShift = function(origin, transforms) {
 
   const translate = {
-    x: ((origin.x - 150) * transforms.scaleX - (origin.x - 150)); //  + transforms.offset.x
-    y: ((origin.y - 150) * transforms.scaleY - (origin.y - 150)); //  + transforms.offset.y
+    x: ((origin.x - 150) * transforms.scaleX - (origin.x - 150)), //  + transforms.offset.x
+    y: ((origin.y - 150) * transforms.scaleY - (origin.y - 150)) //  + transforms.offset.y
   }
 
   return translate

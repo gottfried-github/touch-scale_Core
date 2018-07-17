@@ -13,8 +13,8 @@ function ScaleCapsule() {
 function Scale(el, options) {
   this.el = el
   this.options = options || {}
-  this.scaleFactor = options.scaleFactor;
-  this.transitionClass = options.transitionClass || 'scalable-transition'
+  // this.scaleFactor = options.scaleFactor;
+  // this.transitionClass = options.transitionClass || 'scalable-transition'
 
   this.core = new ScaleCore()
   this.domIo = new ScaleDomIo()
@@ -64,6 +64,8 @@ Scale.prototype.updateTransformData = function(transforms) {
   this.transforms = Object.assign(this.transforms, transforms)
 }
 
+/*
+
 Scale.prototype.rAf = function() {
   var rafId = 0
   rafCb = function() {
@@ -99,9 +101,8 @@ Scale.prototype.tweenIn = function() {
       // current position
       this.transforms.translateX
     )
-
-  }
 }
+*/
 
 
 export {Scale}

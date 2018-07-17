@@ -16,12 +16,12 @@ ScaleDomIo.prototype.getTransforms = function(el) {
   const transformsData = el.style.transform.split('(')[1].split(')')[0].split(',');
 
   transforms.scale = {
-    x: parseFloat(transformsData[0])
+    x: parseFloat(transformsData[0]),
     y: parseFloat(transformsData[3])
   }
 
   transforms.translate = {
-    x: parseFloat(transformsData[4])
+    x: parseFloat(transformsData[4]),
     y: parseFloat(transformsData[5])
   }
 
