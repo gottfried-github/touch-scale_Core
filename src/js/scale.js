@@ -29,19 +29,24 @@ function Scale(el, options) {
 
 Scale.prototype.scaleStart = function(gesture) {
 
-  const coords = this.core.initializeMovement(gesture, this.transforms, this.rects)
+  const coords = this.core.initializeMovement(gesture, this.transforms, this.rects, this.origin)
   this.transforms.translate = coords.translate
   this.origin = coords.origin
 
-  this.domIo.setMatrix(this.transforms)
-  this.domIo.setOrigin(this.origin)
+  this.domIo.setMatrix(this.el, this.transforms)
+  this.domIo.setOrigin(this.el, this.origin)
 
   // this.transforms = this.core.handleOriginChange()
   // this.anchor = this.core.setAnchor(this.transforms, this.ev.center)
 }
 
 Scale.prototype.scaleMove = function(gesture) {
-  this.transforms = this.core.calculateDiscretePoint(gesture, this.transforms)
+  const calculated = this.core.calculateDiscretePoint(gesture, this.transforms)
+
+  this.transforms.scale = calculated.scale
+  this.transforms.translate = calculated.translate
+
+  this.domIo.setMatrix(this.el, this.transforms)
 }
 
 Scale.prototype.scaleStop = function(gesture) {

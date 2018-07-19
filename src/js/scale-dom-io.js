@@ -60,6 +60,10 @@ ScaleDomIo.prototype.doSetMatrix = function(el, matrixStr) {
   el.style.transform = matrixStr
 }
 
+ScaleDomIo.prototype.setOrigin = function(el, origin) {
+  el.style.transformOrigin = origin.x+ "px "+ origin.y+ "px"
+}
+
 ScaleDomIo.prototype.initializeElementsMatrix = function(el) {
   // set the initial value of transform to matrix;
   const matrixStr = 'matrix(1, 0, 0, 1, 0, 0)'

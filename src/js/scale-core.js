@@ -1,8 +1,12 @@
 function ScaleCore() {
-
+  this.anchor = {
+    scale: {
+      x: 1, y: 1
+    }
+  }
 }
 
-ScaleCore.prototype.initializeMovement = function(gesture, transforms) {
+ScaleCore.prototype.initializeMovement = function(gesture, transforms, rects) {
 
   /*
   initialize the occuring gesture:
@@ -17,7 +21,7 @@ ScaleCore.prototype.initializeMovement = function(gesture, transforms) {
   const origin = this.mapToOrigin(gesture.center, transforms, rects)
 
   // annigilate shifting of the element on origin change
-  const translate = this.annigilateShift()
+  const translate = this.annigilateShift(origin, transforms)
 
   return {
     translate: transforms.translate,
@@ -37,8 +41,8 @@ ScaleCore.prototype.calculateDiscretePoint = function(gesture, transforms) {
   // transforms.scaleX = this.anchor.scaleX * gesture.scale;
   // transforms.scaleY = this.anchor.scaleY * gesture.scale;
 
-  translate.x = this.anchor.translate.x + (gesture.center.x - this.anchor.gestureCenter.x);
-  translate.y = this.anchor.translate.y + (gesture.center.y - this.anchor.gestureCenter.y);
+  translate.x = this.anchor.translate.x + (gesture.center.x - this.anchor.center.x);
+  translate.y = this.anchor.translate.y + (gesture.center.y - this.anchor.center.y);
 
   return {
     scale: scale,
