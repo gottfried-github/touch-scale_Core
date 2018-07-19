@@ -1,5 +1,5 @@
 import {Scale} from "../dist/scale.js"
-import {Hammer} from "hammer"
+import {pinchEmulator} from "emulate-pinch"
 
 function main() {
   console.log(Scale)
@@ -28,32 +28,23 @@ function main() {
     scalable.updateTransformData(transforms)
   }
 
-  el.addEventListener("pinchstart", (ev) => {
-    const gesture = {
-      center: ev.center,
-      scale: ev.scale
-    }
+  //
+  pinchEmulator.onstart = function(ev) {
+    console.log("onstart", ev)
+    scaler.scaleStart(ev)
+  }
 
-    scaler.scaleStart(gesture)
-  })
+  pinchEmulator.onmove = function(ev) {
+    console.log("onmove", ev)
+    scaler.scaleMove(ev)
+  }
 
-  el.addEventListener("pinchmove", (ev) => {
-    const gesture = {
-      center: ev.center,
-      scale: ev.scale
-    }
+  pinchEmulator.onend = function(ev) {
+    console.log("onend", ev)
+    scaler.scaleStop(ev)
+  }
 
-    scaler.scaleMove(gesture)
-  })
-
-  el.addEventListener("pinchend", (ev) => {
-    const gesture = {
-      center: ev.center,
-      scale: ev.scale
-    }
-
-    scaler.scaleStop(gesture)
-  })
+  pinchEmulator.subscribe()
 
 }
 
