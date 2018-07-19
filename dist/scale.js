@@ -47,45 +47,95 @@ if (typeof Object.assign != 'function') {
 }
 
 function ScaleCore() {
-
+  this.anchor = {
+    scale: {
+      x: 1, y: 1
+    }
+  }
 }
 
-ScaleCore.prototype.calculateTransform = function(target, transforms, rects, parent) {
+ScaleCore.prototype.initializeMovement = function(gesture, transforms, rects) {
 
-  // project, what rects of el would look like after it's scaled
-  const rectsProjected = this.projectRects(target, rects, transforms)
+  /*
+  initialize the occuring gesture:
+  */
 
-  // adjust the el's translation to fit it in it's container nicely
-  const transformsNew = this.encounterBounds(transforms, rectsProjected, parent)
+  // capture the initial coordinates of ev and el
+  this.anchor.center = gesture.center
+  this.anchor.translate = transforms.translate
 
-  // update the data
-  transformsNew.scaleX = target
-  transformsNew.scaleY = target
+  // map ev's position to the appropriate (proper) transform-origin value (which is always in scale of 1)
+  // (map ev's position onto the el's matrix)
+  const origin = this.mapToOrigin(gesture.center, transforms, rects)
+
+  // annigilate shifting of the element on origin change
+  const translate = this.annigilateShift(origin, transforms)
+
+  return {
+    translate: transforms.translate,
+    origin: origin
+  }
+}
+
+// calculate a discrete point in the move
+ScaleCore.prototype.calculateDiscretePoint = function(gesture, transforms) {
+
+  const scale = {}
+  const translate = {}
+
+  scale.x = this.anchor.scale.x * gesture.scale;
+  scale.y = this.anchor.scale.y * gesture.scale;
+
+  // transforms.scaleX = this.anchor.scaleX * gesture.scale;
+  // transforms.scaleY = this.anchor.scaleY * gesture.scale;
+
+  translate.x = this.anchor.translate.x + (gesture.center.x - this.anchor.center.x);
+  translate.y = this.anchor.translate.y + (gesture.center.y - this.anchor.center.y);
+
+  return {
+    scale: scale,
+    traslate: translate
+  }
+}
+
+ScaleCore.prototype.finishMovement = function(gesture, transforms) {
+
+  const transformsNew = this.calculateDiscretePoint(gesture, transforms)
+
+  // anchor the scale value, to use as point of departure in next movement
+  this.anchor.scale = transformsNew.scale
 
   return transformsNew
 }
 
-ScaleCore.prototype.projectRects = function(target, rects, transforms) {
-
-  // this.coordinates.rects = this.el.getBoundingClientRect();
-
-  // figure out the dimensions for the element to obtain after scaling:
-  var ratio = target / transforms.scaleX;
-
-  // we make projection of the future scaled element...
-  const rectsProjected = {
-    left: (rects.left + rects.width / 2) - (transforms.originX * target),
-    top: (rects.top + rects.height / 2) - (transforms.originY * target),
-    width: rects.width * ratio,
-    height: rects.height * ratio
+ScaleCore.prototype.mapToOrigin = function(gestureCenter, transforms, rects) {
+  // determine point's position, relative to the scalable element
+  const pointPosWithinEl = {
+    left: gestureCenter.x - rects.left,
+    top: gestureCenter.y - rects.top
   }
 
-  return rectsProjected
+  // map point's position to the appropriate (proper) transform-origin value (which is always in scale of 1)
+  const origin = {
+    x: pointPosWithinEl.left / transforms.scale.x,
+    y: pointPosWithinEl.top / transforms.scale.y
+  }
+
+  return origin
+}
+
+ScaleCore.prototype.annigilateShift = function(origin, transforms) {
+
+  const translate = {
+    x: ((origin.x - 150) * transforms.scaleX - (origin.x - 150)), //  + transforms.offset.x
+    y: ((origin.y - 150) * transforms.scaleY - (origin.y - 150)) //  + transforms.offset.y
+  }
+
+  return translate
 }
 
 ScaleCore.prototype.encounterBounds = function(transforms, rects, parent) {
 
-  console.log("encounterBounds", arguments)
   var array = [
     {
       length: rects.width,
@@ -155,34 +205,43 @@ const ScaleCore = {
 
 function ScaleDomIo() {}
 
-ScaleDomIo.prototype.initializeElementsMatrix = function(el) {
-  // set the initial value of transform to matrix;
-  const matrixStr = 'matrix(1, 0, 0, 1, 0, 0)'
+ScaleDomIo.prototype.getOrigin = function(el) {
+  const originData = window.getComputedStyle(el)['transform-origin'].split(' ')
 
-  this.doSetMatrix(el, matrixStr)
+  const origin = {
+    x: parseInt(originData[0]),
+    y: parseInt(originData[1])
+  }
+
+  return origin
 }
 
 ScaleDomIo.prototype.getTransforms = function(el) {
-  // get the initial value of the origin
-  const origin = window.getComputedStyle(el)['transform-origin'].split(' ')
+  const transforms = {}
+  const transformsData = el.style.transform.split('(')[1].split(')')[0].split(',');
 
-  return {
-    // rects: this.el.getBoundingClientRect(),
-    scaleX: 1,
-    scaleY: 1,
-    originX: parseInt(origin[0]),
-    originY: parseInt(origin[1]),
-    translateX: 0,
-    translateY: 0
-      // offset: {
-      //   x: 0,
-      //   y: 0
-      // }
+  transforms.scale = {
+    x: parseFloat(transformsData[0]),
+    y: parseFloat(transformsData[3])
   }
+
+  transforms.translate = {
+    x: parseFloat(transformsData[4]),
+    y: parseFloat(transformsData[5])
+  }
+
+  return transforms
 }
 
 ScaleDomIo.prototype.getRects = function(el) {
   return el.getBoundingClientRect()
+}
+
+ScaleDomIo.prototype.getViewportDims = function() {
+  return {
+    width: getViewportWidth(),
+    height: getViewportHeight()
+  }
 }
 
 ScaleDomIo.prototype.setMatrix = function(el, transforms) {
@@ -206,11 +265,14 @@ ScaleDomIo.prototype.doSetMatrix = function(el, matrixStr) {
   el.style.transform = matrixStr
 }
 
-ScaleDomIo.prototype.getViewportDims = function() {
-  return {
-    width: getViewportWidth(),
-    height: getViewportHeight()
-  }
+ScaleDomIo.prototype.setOrigin = function(el, origin) {
+  el.style.transformOrigin = origin.x+ "px "+ origin.y+ "px"
+}
+
+ScaleDomIo.prototype.initializeElementsMatrix = function(el) {
+  // set the initial value of transform to matrix;
+  const matrixStr = 'matrix(1, 0, 0, 1, 0, 0)'
+  this.doSetMatrix(el, matrixStr)
 }
 
 export {ScaleDomIo}
@@ -241,8 +303,8 @@ function ScaleCapsule() {
 function Scale(el, options) {
   this.el = el
   this.options = options || {}
-  this.scaleFactor = options.scaleFactor;
-  this.transitionClass = options.transitionClass || 'scalable-transition'
+  // this.scaleFactor = options.scaleFactor;
+  // this.transitionClass = options.transitionClass || 'scalable-transition'
 
   this.core = new ScaleCore()
   this.domIo = new ScaleDomIo()
@@ -251,48 +313,92 @@ function Scale(el, options) {
   this.domIo.initializeElementsMatrix(this.el)
 
   this.transforms = this.domIo.getTransforms(this.el)
+  this.origin = this.domIo.getOrigin(this.el)
   this.rects = this.domIo.getRects(this.el)
 }
 
-Scale.prototype.scaleUp = function() {
-  this.doScale(this.scaleFactor, true)
-}
+Scale.prototype.scaleStart = function(gesture) {
 
-Scale.prototype.scaleDown = function() {
-  this.doScale(1, false)
-}
+  const coords = this.core.initializeMovement(gesture, this.transforms, this.rects, this.origin)
+  this.transforms.translate = coords.translate
+  this.origin = coords.origin
 
-Scale.prototype.doScale = function(target, scaledUp) {
-
-  // update our rects data, in case of anything
-  this.rects = this.domIo.getRects(this.el)
-  const vprtDims = this.domIo.getViewportDims()
-  this.transforms = this.core.calculateTransform(target, this.transforms, this.rects, vprtDims)
-
-  const self = this
-  function trnsnEndCb() {
-    self.el.removeEventListener("transitionend", trnsnEndCb)
-    self.el.classList.remove(self.transitionClass)
-
-    self.rects = self.domIo.getRects(self.el)
-    self.scaledUp = scaledUp
-
-    if (self.options.afterScale)
-      self.options.afterScale(self.el);
-  }
-
-  this.el.addEventListener('transitionend', trnsnEndCb)
-
-  if (this.options.beforeScale)
-    this.options.beforeScale(this.rects)
-
-  this.el.classList.add(this.transitionClass)
   this.domIo.setMatrix(this.el, this.transforms)
+  this.domIo.setOrigin(this.el, this.origin)
+
+  // this.transforms = this.core.handleOriginChange()
+  // this.anchor = this.core.setAnchor(this.transforms, this.ev.center)
+}
+
+Scale.prototype.scaleMove = function(gesture) {
+  const calculated = this.core.calculateDiscretePoint(gesture, this.transforms)
+
+  this.transforms.scale = calculated.scale
+  this.transforms.translate = calculated.translate
+
+  this.domIo.setMatrix(this.el, this.transforms)
+}
+
+Scale.prototype.scaleStop = function(gesture) {
+
+  this.transforms = this.core.finishMovement(gesture, this.transforms)
+  this.rects = this.domIo.getRects(this.el)
+
+  // see, if el exceeds parent's area in an ugly way
+  const transformsBounded = this.encounterBounds(this.transforms, this.rects, vprtDims)
+
+  if (
+    transformsBounded.translateX != this.transforms.translateX
+    || transformsBounded.translateY != this.transforms.translateY
+  ) {
+    this.tweenIn()
+  }
 }
 
 Scale.prototype.updateTransformData = function(transforms) {
   this.transforms = Object.assign(this.transforms, transforms)
 }
+
+/*
+
+Scale.prototype.rAf = function() {
+  var rafId = 0
+  rafCb = function() {
+
+    const rafIdPrev = rafId
+    rafId = window.requestAnimationFrame(() => {
+
+      // prevent multiple simultaneuos rAfs
+      if (rafId == rafIdPrev) return
+
+      // do our animation
+
+      const val = this.range.getNext()
+      this.transforms.translateX = val
+      this.transforms.translateY = val
+      rafCb()
+    })
+  }
+}
+
+Scale.prototype.tweenIn = function() {
+
+    var value = new Range(
+      // length of the range
+      transformsBound.translateX - this.transforms.translateX,
+
+      // points to go from and to
+      {
+        from: this.transforms.translateY,
+        to: transformsBound.translateY
+      },
+
+      // current position
+      this.transforms.translateX
+    )
+}
+*/
+
 
 export {Scale}
 
