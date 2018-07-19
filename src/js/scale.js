@@ -25,11 +25,15 @@ function Scale(el, options) {
   this.transforms = this.domIo.getTransforms(this.el)
   this.origin = this.domIo.getOrigin(this.el)
   this.rects = this.domIo.getRects(this.el)
+
+  console.log("scaler: ", this)
 }
 
 Scale.prototype.scaleStart = function(gesture) {
-
+  console.log("scaleStart, gesture: ", gesture)
   const coords = this.core.initializeMovement(gesture, this.transforms, this.rects, this.origin)
+  console.log("scaleStart, initMovement return", coords)
+
   this.transforms.translate = coords.translate
   this.origin = coords.origin
 
@@ -41,6 +45,7 @@ Scale.prototype.scaleStart = function(gesture) {
 }
 
 Scale.prototype.scaleMove = function(gesture) {
+  console.log("scaleMove, gesture: ", gesture)
   const calculated = this.core.calculateDiscretePoint(gesture, this.transforms)
 
   this.transforms.scale = calculated.scale
@@ -50,7 +55,7 @@ Scale.prototype.scaleMove = function(gesture) {
 }
 
 Scale.prototype.scaleStop = function(gesture) {
-
+  console.log("scaleStop, gesture: ", gesture)
   this.transforms = this.core.finishMovement(gesture, this.transforms)
   this.rects = this.domIo.getRects(this.el)
 

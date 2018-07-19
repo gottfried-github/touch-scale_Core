@@ -68,21 +68,26 @@ ScaleCore.prototype.initializeMovement = function(gesture, transforms, rects) {
   // (map ev's position onto the el's matrix)
   const origin = this.mapToOrigin(gesture.center, transforms, rects)
 
+
   // annigilate shifting of the element on origin change
   const translate = this.annigilateShift(origin, transforms)
 
+  console.log("initMovement - origin, translate, anchor", origin, translate, this.anchor)
   return {
-    translate: transforms.translate,
+    translate: translate, // transforms.translate,
     origin: origin
   }
 }
 
 // calculate a discrete point in the move
 ScaleCore.prototype.calculateDiscretePoint = function(gesture, transforms) {
-
+  // console.log("core, calculateDiscretePoint - gesture, transforms, anchor:", gesture, transforms, this.anchor)
+  // console.log("core, calculateDiscretePoint - translate.x, ~y:", transforms.translate.x, transforms.translate.y)
+  // console.log("core, calculateDiscretePoint - anchor.translate.x, ~y:", this.anchor.translate.x, this.anchor.translate.y)
   const scale = {}
   const translate = {}
 
+  // hammer's scale starts with 0, emulate-pinch - from 1
   scale.x = this.anchor.scale.x * gesture.scale;
   scale.y = this.anchor.scale.y * gesture.scale;
 
@@ -92,9 +97,10 @@ ScaleCore.prototype.calculateDiscretePoint = function(gesture, transforms) {
   translate.x = this.anchor.translate.x + (gesture.center.x - this.anchor.center.x);
   translate.y = this.anchor.translate.y + (gesture.center.y - this.anchor.center.y);
 
+  // console.log("core, calculateDiscretePoint - translate:", translate)
   return {
     scale: scale,
-    traslate: translate
+    translate: translate
   }
 }
 
@@ -126,9 +132,11 @@ ScaleCore.prototype.mapToOrigin = function(gestureCenter, transforms, rects) {
 
 ScaleCore.prototype.annigilateShift = function(origin, transforms) {
 
+  // 150 is (if I recall it right) half of the element's size (no idea why that
+  // needs or needs not to be the case)
   const translate = {
-    x: ((origin.x - 150) * transforms.scaleX - (origin.x - 150)), //  + transforms.offset.x
-    y: ((origin.y - 150) * transforms.scaleY - (origin.y - 150)) //  + transforms.offset.y
+    x: ((origin.x - 150) * transforms.scale.x - (origin.x - 150)), //  + transforms.offset.x
+    y: ((origin.y - 150) * transforms.scale.x - (origin.y - 150)) //  + transforms.offset.y
   }
 
   return translate
@@ -247,10 +255,10 @@ ScaleDomIo.prototype.getViewportDims = function() {
 ScaleDomIo.prototype.setMatrix = function(el, transforms) {
   console.log('setMatrix', transforms)
   const matrixStr = 'matrix(' +
-    transforms.scaleX + ', 0, 0, ' +
-    transforms.scaleY + ', ' +
-    transforms.translateX + ', ' +
-    transforms.translateY +
+    transforms.scale.x + ', 0, 0, ' +
+    transforms.scale.y + ', ' +
+    transforms.translate.x + ', ' +
+    transforms.translate.y +
     ')'
 
   this.doSetMatrix(el, matrixStr)
@@ -315,11 +323,15 @@ function Scale(el, options) {
   this.transforms = this.domIo.getTransforms(this.el)
   this.origin = this.domIo.getOrigin(this.el)
   this.rects = this.domIo.getRects(this.el)
+
+  console.log("scaler: ", this)
 }
 
 Scale.prototype.scaleStart = function(gesture) {
-
+  console.log("scaleStart, gesture: ", gesture)
   const coords = this.core.initializeMovement(gesture, this.transforms, this.rects, this.origin)
+  console.log("scaleStart, initMovement return", coords)
+
   this.transforms.translate = coords.translate
   this.origin = coords.origin
 
@@ -331,6 +343,7 @@ Scale.prototype.scaleStart = function(gesture) {
 }
 
 Scale.prototype.scaleMove = function(gesture) {
+  console.log("scaleMove, gesture: ", gesture)
   const calculated = this.core.calculateDiscretePoint(gesture, this.transforms)
 
   this.transforms.scale = calculated.scale
@@ -340,7 +353,7 @@ Scale.prototype.scaleMove = function(gesture) {
 }
 
 Scale.prototype.scaleStop = function(gesture) {
-
+  console.log("scaleStop, gesture: ", gesture)
   this.transforms = this.core.finishMovement(gesture, this.transforms)
   this.rects = this.domIo.getRects(this.el)
 

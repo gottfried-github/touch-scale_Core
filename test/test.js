@@ -30,17 +30,17 @@ function main() {
 
   //
   pinchEmulator.onstart = function(ev) {
-    console.log("onstart", ev)
+    // console.log("onstart", ev)
     scaler.scaleStart(ev)
   }
 
   pinchEmulator.onmove = function(ev) {
-    console.log("onmove", ev)
+    // console.log("onmove", ev)
     scaler.scaleMove(ev)
   }
 
   pinchEmulator.onend = function(ev) {
-    console.log("onend", ev)
+    // console.log("onend", ev)
     scaler.scaleStop(ev)
   }
 

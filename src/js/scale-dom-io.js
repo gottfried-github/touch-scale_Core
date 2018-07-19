@@ -42,10 +42,10 @@ ScaleDomIo.prototype.getViewportDims = function() {
 ScaleDomIo.prototype.setMatrix = function(el, transforms) {
   console.log('setMatrix', transforms)
   const matrixStr = 'matrix(' +
-    transforms.scaleX + ', 0, 0, ' +
-    transforms.scaleY + ', ' +
-    transforms.translateX + ', ' +
-    transforms.translateY +
+    transforms.scale.x + ', 0, 0, ' +
+    transforms.scale.y + ', ' +
+    transforms.translate.x + ', ' +
+    transforms.translate.y +
     ')'
 
   this.doSetMatrix(el, matrixStr)
