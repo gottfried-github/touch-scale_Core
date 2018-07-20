@@ -14,20 +14,22 @@ ScaleCore.prototype.initializeMovement = function(gesture, transforms, rects) {
 
   // capture the initial coordinates of ev and el
   this.anchor.center = gesture.center
-  this.anchor.translate = transforms.translate
 
   // map ev's position to the appropriate (proper) transform-origin value (which is always in scale of 1)
   // (map ev's position onto the el's matrix)
-  const origin = this.mapToOrigin(gesture.center, transforms, rects)
+  const newOrigin = this.mapToOrigin(gesture.center, transforms, rects)
 
 
   // annigilate shifting of the element on origin change
-  const translate = this.annigilateShift(origin, transforms)
+  const translate = this.annigilateShift(newOrigin, transforms)
+  // const translate = transforms.translate
+
+  this.anchor.translate = translate
 
   // console.log("initMovement - origin, translate, anchor", origin, translate, this.anchor)
   return {
     translate: translate, // transforms.translate,
-    origin: origin
+    origin: newOrigin
   }
 }
 

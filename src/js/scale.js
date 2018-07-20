@@ -30,18 +30,15 @@ function Scale(el, options) {
 }
 
 Scale.prototype.scaleStart = function(gesture) {
-  console.log("scaleStart, gesture: ", gesture)
+  // console.log("scaleStart, gesture: ", gesture)
   const coords = this.core.initializeMovement(gesture, this.transforms, this.rects, this.origin)
-  console.log("scaleStart, initMovement return", coords)
+  // console.log("scaleStart, initMovement return", coords)
 
   this.transforms.translate = coords.translate
   this.origin = coords.origin
 
-  this.domIo.setMatrix(this.el, this.transforms)
   this.domIo.setOrigin(this.el, this.origin)
-
-  // this.transforms = this.core.handleOriginChange()
-  // this.anchor = this.core.setAnchor(this.transforms, this.ev.center)
+  this.domIo.setMatrix(this.el, this.transforms)
 }
 
 Scale.prototype.scaleMove = function(gesture) {
