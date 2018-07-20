@@ -91,8 +91,8 @@ ScaleCore.prototype.annigilateShift = function(origin, transforms) {
 
   // in fact, 150 is full size of the element
   const translate = {
-    x: ((origin.x - 150) * transforms.scale.x - (origin.x - 150)), //  + transforms.offset.x
-    y: ((origin.y - 150) * transforms.scale.x - (origin.y - 150)) //  + transforms.offset.y
+    x: ((origin.x - 50) * transforms.scale.x - (origin.x - 50)), //  + transforms.offset.x
+    y: ((origin.y - 50) * transforms.scale.y - (origin.y - 50)) //  + transforms.offset.y
   }
 
   return translate
