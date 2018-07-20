@@ -52,19 +52,24 @@ Scale.prototype.scaleMove = function(gesture) {
 }
 
 Scale.prototype.scaleStop = function(gesture) {
-  console.log("scaleStop, gesture: ", gesture)
+  // console.log("scaleStop, gesture: ", gesture)
   this.transforms = this.core.finishMovement(gesture, this.transforms)
-  this.rects = this.domIo.getRects(this.el)
+
+  const vprtDims = this.domIo.getViewportDims()
 
   // see, if el exceeds parent's area in an ugly way
-  const transformsBounded = this.encounterBounds(this.transforms, this.rects, vprtDims)
+  const translateBound = this.core.encounterBounds(this.transforms, this.rects, vprtDims)
 
-  if (
-    transformsBounded.translateX != this.transforms.translateX
-    || transformsBounded.translateY != this.transforms.translateY
-  ) {
-    this.tweenIn()
-  }
+  // this.transforms.translate = translateBound
+  this.domIo.setMatrix(this.el, this.transforms)
+  this.rects = this.domIo.getRects(this.el)
+
+  // if (
+  //   transformsBounded.translateX != this.transforms.translateX
+  //   || transformsBounded.translateY != this.transforms.translateY
+  // ) {
+  //   this.tweenIn()
+  // }
 }
 
 Scale.prototype.updateTransformData = function(transforms) {
