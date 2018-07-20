@@ -104,13 +104,13 @@ ScaleCore.prototype.encounterBounds = function(transforms, rects, parent) {
     {
       length: rects.width,
       pos: rects.left,
-      translation: transforms.translateX,
+      translation: transforms.translate.x,
       parent: parent.width // parseInt(getViewportWidth())
     },
     {
       length: rects.height,
       pos: rects.top,
-      translation: transforms.translateY,
+      translation: transforms.translate.y,
       parent: parent.height // parseInt(getViewportHeight())
     }
   ]
@@ -121,14 +121,17 @@ ScaleCore.prototype.encounterBounds = function(transforms, rects, parent) {
     array[i].newPos = (typeof(temp) === 'number') ? temp : array[i].translation;
   }
 
-  const transformsNew = {}
+  const translate = {
+    x: array[0].newPos,
+    y: array[1].newPos
+  }
 
   // Object.assign is es6, but there's a polyfill, in case of anything:
   // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/assign
-  Object.assign(transformsNew, transforms)
+  // Object.assign(transformsNew, transforms)
 
-  transformsNew.translateX = array[0].newPos;
-  transformsNew.translateY = array[1].newPos;
+  // transformsNew.translateX = array[0].newPos;
+  // transformsNew.translateY = array[1].newPos;
 
   function process(axis) {
 
@@ -150,7 +153,9 @@ ScaleCore.prototype.encounterBounds = function(transforms, rects, parent) {
     return false;
   }
 
-  return transformsNew;
+  return translate
+
+  // return transformsNew;
   //this.element.css( 'transform', 'matrix(' + coords.scaleX + ', 0, 0, ' + coords.scaleY +  ', ' + x.newPos + ', ' + y.newPos + ')' );
 
 }

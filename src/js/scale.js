@@ -26,7 +26,7 @@ function Scale(el, options) {
   this.origin = this.domIo.getOrigin(this.el)
   this.rects = this.domIo.getRects(this.el)
 
-  console.log("scaler: ", this)
+  // console.log("scaler: ", this)
 }
 
 Scale.prototype.scaleStart = function(gesture) {
@@ -42,7 +42,7 @@ Scale.prototype.scaleStart = function(gesture) {
 }
 
 Scale.prototype.scaleMove = function(gesture) {
-  console.log("scaleMove, gesture: ", gesture)
+  // console.log("scaleMove, gesture: ", gesture)
   const calculated = this.core.calculateDiscretePoint(gesture, this.transforms)
 
   this.transforms.scale = calculated.scale
