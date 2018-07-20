@@ -62,20 +62,22 @@ ScaleCore.prototype.initializeMovement = function(gesture, transforms, rects) {
 
   // capture the initial coordinates of ev and el
   this.anchor.center = gesture.center
-  this.anchor.translate = transforms.translate
 
   // map ev's position to the appropriate (proper) transform-origin value (which is always in scale of 1)
   // (map ev's position onto the el's matrix)
-  const origin = this.mapToOrigin(gesture.center, transforms, rects)
+  const newOrigin = this.mapToOrigin(gesture.center, transforms, rects)
 
 
   // annigilate shifting of the element on origin change
-  const translate = this.annigilateShift(origin, transforms)
+  const translate = this.annigilateShift(newOrigin, transforms)
+  // const translate = transforms.translate
 
-  console.log("initMovement - origin, translate, anchor", origin, translate, this.anchor)
+  this.anchor.translate = translate
+
+  // console.log("initMovement - origin, translate, anchor", origin, translate, this.anchor)
   return {
     translate: translate, // transforms.translate,
-    origin: origin
+    origin: newOrigin
   }
 }
 
@@ -134,9 +136,11 @@ ScaleCore.prototype.annigilateShift = function(origin, transforms) {
 
   // 150 is (if I recall it right) half of the element's size (no idea why that
   // needs or needs not to be the case)
+
+  // in fact, 150 is full size of the element
   const translate = {
-    x: ((origin.x - 150) * transforms.scale.x - (origin.x - 150)), //  + transforms.offset.x
-    y: ((origin.y - 150) * transforms.scale.x - (origin.y - 150)) //  + transforms.offset.y
+    x: ((origin.x - 50) * transforms.scale.x - (origin.x - 50)), //  + transforms.offset.x
+    y: ((origin.y - 50) * transforms.scale.y - (origin.y - 50)) //  + transforms.offset.y
   }
 
   return translate
@@ -148,13 +152,13 @@ ScaleCore.prototype.encounterBounds = function(transforms, rects, parent) {
     {
       length: rects.width,
       pos: rects.left,
-      translation: transforms.translateX,
+      translation: transforms.translate.x,
       parent: parent.width // parseInt(getViewportWidth())
     },
     {
       length: rects.height,
       pos: rects.top,
-      translation: transforms.translateY,
+      translation: transforms.translate.y,
       parent: parent.height // parseInt(getViewportHeight())
     }
   ]
@@ -165,14 +169,17 @@ ScaleCore.prototype.encounterBounds = function(transforms, rects, parent) {
     array[i].newPos = (typeof(temp) === 'number') ? temp : array[i].translation;
   }
 
-  const transformsNew = {}
+  const translate = {
+    x: array[0].newPos,
+    y: array[1].newPos
+  }
 
   // Object.assign is es6, but there's a polyfill, in case of anything:
   // https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Global_Objects/Object/assign
-  Object.assign(transformsNew, transforms)
+  // Object.assign(transformsNew, transforms)
 
-  transformsNew.translateX = array[0].newPos;
-  transformsNew.translateY = array[1].newPos;
+  // transformsNew.translateX = array[0].newPos;
+  // transformsNew.translateY = array[1].newPos;
 
   function process(axis) {
 
@@ -194,7 +201,9 @@ ScaleCore.prototype.encounterBounds = function(transforms, rects, parent) {
     return false;
   }
 
-  return transformsNew;
+  return translate
+
+  // return transformsNew;
   //this.element.css( 'transform', 'matrix(' + coords.scaleX + ', 0, 0, ' + coords.scaleY +  ', ' + x.newPos + ', ' + y.newPos + ')' );
 
 }
@@ -324,26 +333,23 @@ function Scale(el, options) {
   this.origin = this.domIo.getOrigin(this.el)
   this.rects = this.domIo.getRects(this.el)
 
-  console.log("scaler: ", this)
+  // console.log("scaler: ", this)
 }
 
 Scale.prototype.scaleStart = function(gesture) {
-  console.log("scaleStart, gesture: ", gesture)
+  // console.log("scaleStart, gesture: ", gesture)
   const coords = this.core.initializeMovement(gesture, this.transforms, this.rects, this.origin)
-  console.log("scaleStart, initMovement return", coords)
+  // console.log("scaleStart, initMovement return", coords)
 
   this.transforms.translate = coords.translate
   this.origin = coords.origin
 
-  this.domIo.setMatrix(this.el, this.transforms)
   this.domIo.setOrigin(this.el, this.origin)
-
-  // this.transforms = this.core.handleOriginChange()
-  // this.anchor = this.core.setAnchor(this.transforms, this.ev.center)
+  this.domIo.setMatrix(this.el, this.transforms)
 }
 
 Scale.prototype.scaleMove = function(gesture) {
-  console.log("scaleMove, gesture: ", gesture)
+  // console.log("scaleMove, gesture: ", gesture)
   const calculated = this.core.calculateDiscretePoint(gesture, this.transforms)
 
   this.transforms.scale = calculated.scale
@@ -353,19 +359,24 @@ Scale.prototype.scaleMove = function(gesture) {
 }
 
 Scale.prototype.scaleStop = function(gesture) {
-  console.log("scaleStop, gesture: ", gesture)
+  // console.log("scaleStop, gesture: ", gesture)
   this.transforms = this.core.finishMovement(gesture, this.transforms)
-  this.rects = this.domIo.getRects(this.el)
+
+  const vprtDims = this.domIo.getViewportDims()
 
   // see, if el exceeds parent's area in an ugly way
-  const transformsBounded = this.encounterBounds(this.transforms, this.rects, vprtDims)
+  const translateBound = this.core.encounterBounds(this.transforms, this.rects, vprtDims)
 
-  if (
-    transformsBounded.translateX != this.transforms.translateX
-    || transformsBounded.translateY != this.transforms.translateY
-  ) {
-    this.tweenIn()
-  }
+  // this.transforms.translate = translateBound
+  this.domIo.setMatrix(this.el, this.transforms)
+  this.rects = this.domIo.getRects(this.el)
+
+  // if (
+  //   transformsBounded.translateX != this.transforms.translateX
+  //   || transformsBounded.translateY != this.transforms.translateY
+  // ) {
+  //   this.tweenIn()
+  // }
 }
 
 Scale.prototype.updateTransformData = function(transforms) {
