@@ -53,7 +53,7 @@ Scale.prototype.scaleMove = function(gesture) {
 
 Scale.prototype.scaleStop = function(gesture) {
   // console.log("scaleStop, gesture: ", gesture)
-  this.transforms = this.core.finishMovement(gesture, this.transforms)
+  this.transforms = this.core.finishMovement(gesture, this.transforms, this.origin)
 
   const vprtDims = this.domIo.getViewportDims()
 
@@ -72,8 +72,11 @@ Scale.prototype.scaleStop = function(gesture) {
   // }
 }
 
-Scale.prototype.updateTransformData = function(transforms) {
+Scale.prototype.updateTransformData = function(transforms, origin) {
+
+  //
   this.transforms = Object.assign(this.transforms, transforms)
+  this.origin = Object.assign(this.origin, origin)
 }
 
 /*

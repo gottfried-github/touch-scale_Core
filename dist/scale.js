@@ -50,6 +50,9 @@ function ScaleCore() {
   this.anchor = {
     scale: {
       x: 1, y: 1
+    },
+    offset: {
+      x: 0, y: 0
     }
   }
 }
@@ -65,19 +68,26 @@ ScaleCore.prototype.initializeMovement = function(gesture, transforms, rects) {
 
   // map ev's position to the appropriate (proper) transform-origin value (which is always in scale of 1)
   // (map ev's position onto the el's matrix)
-  const newOrigin = this.mapToOrigin(gesture.center, transforms, rects)
-
+  const originNew = this.mapToOrigin(gesture.center, transforms, rects)
 
   // annigilate shifting of the element on origin change
-  const translate = this.annigilateShift(newOrigin, transforms)
+  const translateNew = this.annigilateShift(originNew, transforms)
+
+  translateNew.x += this.anchor.offset.x // this.anchor.translate.x - transforms.translate.x
+  translateNew.y += this.anchor.offset.y // this.anchor.translate.y - transforms.translate.y
+
+  // const translateOffset = {
+
+  // }
+
   // const translate = transforms.translate
 
-  this.anchor.translate = translate
+  this.anchor.translate = translateNew
 
   // console.log("initMovement - origin, translate, anchor", origin, translate, this.anchor)
   return {
-    translate: translate, // transforms.translate,
-    origin: newOrigin
+    translate: translateNew, // transforms.translate,
+    origin: originNew
   }
 }
 
@@ -106,12 +116,26 @@ ScaleCore.prototype.calculateDiscretePoint = function(gesture, transforms) {
   }
 }
 
-ScaleCore.prototype.finishMovement = function(gesture, transforms) {
+ScaleCore.prototype.finishMovement = function(gesture, transforms, origin) {
 
   const transformsNew = this.calculateDiscretePoint(gesture, transforms)
 
+  // weirdly enough, we have to calculate the offset
+  // transformsNew.translate.x += (transformsNew.translate.x - translateCalculated.x)
+  // transformsNew.translate.y += (transformsNew.translate.y - translateCalculated.y)
+
   // anchor the scale value, to use as point of departure in next movement
   this.anchor.scale = transformsNew.scale
+
+  const translateCalculated = this.annigilateShift(origin, transforms)
+
+  // this.anchor.offset.x += transformsNew.translate.x - translateCalculated.x
+  // this.anchor.offset.y += transformsNew.translate.y - translateCalculated.y
+
+  this.anchor.offset = {
+    x: transformsNew.translate.x - translateCalculated.x,
+    y: transformsNew.translate.y - translateCalculated.y
+  }
 
   return transformsNew
 }
@@ -144,6 +168,32 @@ ScaleCore.prototype.annigilateShift = function(origin, transforms) {
   }
 
   return translate
+}
+
+/*
+Because of the specifics of how matrix is projected - which I don't understand, but the bottom line is -
+scale factor of el affects the necessary translation.
+
+i. e. (e. g.), el with the same origin but different scale factors will need different translation, to
+stay at the same place (in terms of origin)
+
+I mean, say I have origin xx, scale of xy, and translation xz. Now, I've changed scale to yx.
+So far so good - the el is where it's suppose to be - projected outwards of the origin. But if I now
+manually set the transofmr-origin prop - even to the same value it was, xx - the el will change it's rendered position..
+
+This doesnt seem to be true...
+
+*/
+ScaleCore.prototype.encounterOffset = function(origin, transforms) {
+
+  const translateCalculated = this.annigilateShift(origin, transforms)
+
+  const translateOffset = {
+    x: transforms.translate.x - translateCalculated.x,
+    y: transforms.translate.y - translateCalculated.y
+  }
+
+  return translateOffset
 }
 
 ScaleCore.prototype.encounterBounds = function(transforms, rects, parent) {
@@ -360,7 +410,7 @@ Scale.prototype.scaleMove = function(gesture) {
 
 Scale.prototype.scaleStop = function(gesture) {
   // console.log("scaleStop, gesture: ", gesture)
-  this.transforms = this.core.finishMovement(gesture, this.transforms)
+  this.transforms = this.core.finishMovement(gesture, this.transforms, this.origin)
 
   const vprtDims = this.domIo.getViewportDims()
 
@@ -379,8 +429,11 @@ Scale.prototype.scaleStop = function(gesture) {
   // }
 }
 
-Scale.prototype.updateTransformData = function(transforms) {
+Scale.prototype.updateTransformData = function(transforms, origin) {
+
+  //
   this.transforms = Object.assign(this.transforms, transforms)
+  this.origin = Object.assign(this.origin, origin)
 }
 
 /*
