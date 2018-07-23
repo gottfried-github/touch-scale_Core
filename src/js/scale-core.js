@@ -2,6 +2,9 @@ function ScaleCore() {
   this.anchor = {
     scale: {
       x: 1, y: 1
+    },
+    offset: {
+      x: 0, y: 0
     }
   }
 }
@@ -17,19 +20,26 @@ ScaleCore.prototype.initializeMovement = function(gesture, transforms, rects) {
 
   // map ev's position to the appropriate (proper) transform-origin value (which is always in scale of 1)
   // (map ev's position onto the el's matrix)
-  const newOrigin = this.mapToOrigin(gesture.center, transforms, rects)
-
+  const originNew = this.mapToOrigin(gesture.center, transforms, rects)
 
   // annigilate shifting of the element on origin change
-  const translate = this.annigilateShift(newOrigin, transforms)
+  const translateNew = this.annigilateShift(originNew, transforms)
+
+  translateNew.x += this.anchor.offset.x // this.anchor.translate.x - transforms.translate.x
+  translateNew.y += this.anchor.offset.y // this.anchor.translate.y - transforms.translate.y
+
+  // const translateOffset = {
+
+  // }
+
   // const translate = transforms.translate
 
-  this.anchor.translate = translate
+  this.anchor.translate = translateNew
 
   // console.log("initMovement - origin, translate, anchor", origin, translate, this.anchor)
   return {
-    translate: translate, // transforms.translate,
-    origin: newOrigin
+    translate: translateNew, // transforms.translate,
+    origin: originNew
   }
 }
 
@@ -58,12 +68,17 @@ ScaleCore.prototype.calculateDiscretePoint = function(gesture, transforms) {
   }
 }
 
-ScaleCore.prototype.finishMovement = function(gesture, transforms) {
+ScaleCore.prototype.finishMovement = function(gesture, transforms, origin) {
 
   const transformsNew = this.calculateDiscretePoint(gesture, transforms)
 
   // anchor the scale value, to use as point of departure in next movement
   this.anchor.scale = transformsNew.scale
+
+  const translateCalculated = this.annigilateShift(origin, transforms)
+
+  this.anchor.offset.x = transformsNew.translate.x - translateCalculated.x
+  this.anchor.offset.y = transformsNew.translate.y - translateCalculated.y
 
   return transformsNew
 }
