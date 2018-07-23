@@ -120,22 +120,13 @@ ScaleCore.prototype.finishMovement = function(gesture, transforms, origin) {
 
   const transformsNew = this.calculateDiscretePoint(gesture, transforms)
 
-  // weirdly enough, we have to calculate the offset
-  // transformsNew.translate.x += (transformsNew.translate.x - translateCalculated.x)
-  // transformsNew.translate.y += (transformsNew.translate.y - translateCalculated.y)
-
   // anchor the scale value, to use as point of departure in next movement
   this.anchor.scale = transformsNew.scale
 
   const translateCalculated = this.annigilateShift(origin, transforms)
 
-  // this.anchor.offset.x += transformsNew.translate.x - translateCalculated.x
-  // this.anchor.offset.y += transformsNew.translate.y - translateCalculated.y
-
-  this.anchor.offset = {
-    x: transformsNew.translate.x - translateCalculated.x,
-    y: transformsNew.translate.y - translateCalculated.y
-  }
+  this.anchor.offset.x = transformsNew.translate.x - translateCalculated.x
+  this.anchor.offset.y = transformsNew.translate.y - translateCalculated.y
 
   return transformsNew
 }

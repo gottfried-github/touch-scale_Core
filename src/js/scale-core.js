@@ -72,22 +72,13 @@ ScaleCore.prototype.finishMovement = function(gesture, transforms, origin) {
 
   const transformsNew = this.calculateDiscretePoint(gesture, transforms)
 
-  // weirdly enough, we have to calculate the offset
-  // transformsNew.translate.x += (transformsNew.translate.x - translateCalculated.x)
-  // transformsNew.translate.y += (transformsNew.translate.y - translateCalculated.y)
-
   // anchor the scale value, to use as point of departure in next movement
   this.anchor.scale = transformsNew.scale
 
   const translateCalculated = this.annigilateShift(origin, transforms)
 
-  // this.anchor.offset.x += transformsNew.translate.x - translateCalculated.x
-  // this.anchor.offset.y += transformsNew.translate.y - translateCalculated.y
-
-  this.anchor.offset = {
-    x: transformsNew.translate.x - translateCalculated.x,
-    y: transformsNew.translate.y - translateCalculated.y
-  }
+  this.anchor.offset.x = transformsNew.translate.x - translateCalculated.x
+  this.anchor.offset.y = transformsNew.translate.y - translateCalculated.y
 
   return transformsNew
 }
@@ -120,32 +111,6 @@ ScaleCore.prototype.annigilateShift = function(origin, transforms) {
   }
 
   return translate
-}
-
-/*
-Because of the specifics of how matrix is projected - which I don't understand, but the bottom line is -
-scale factor of el affects the necessary translation.
-
-i. e. (e. g.), el with the same origin but different scale factors will need different translation, to
-stay at the same place (in terms of origin)
-
-I mean, say I have origin xx, scale of xy, and translation xz. Now, I've changed scale to yx.
-So far so good - the el is where it's suppose to be - projected outwards of the origin. But if I now
-manually set the transofmr-origin prop - even to the same value it was, xx - the el will change it's rendered position..
-
-This doesnt seem to be true...
-
-*/
-ScaleCore.prototype.encounterOffset = function(origin, transforms) {
-
-  const translateCalculated = this.annigilateShift(origin, transforms)
-
-  const translateOffset = {
-    x: transforms.translate.x - translateCalculated.x,
-    y: transforms.translate.y - translateCalculated.y
-  }
-
-  return translateOffset
 }
 
 ScaleCore.prototype.encounterBounds = function(transforms, rects, parent) {
