@@ -9,50 +9,56 @@ function ScaleCore() {
   }
 }
 
-ScaleCore.prototype.calculateStart = function(pinch, rects) {
+ScaleCore.prototype.calculateStart = function(pinch, scale, translate, rects) {
 
   // (map ev's position onto the el's matrix)
-  this.transforms.origin = this.mapToOrigin(pinch.center, this.transforms.scale, rects)
+  const originNew = this.mapToOrigin(pinch.center, scale, rects)
 
   // annigilate shifting of the element on origin change
-  this.transforms.translate = this.annigilateShift(this.transforms.origin, this.transforms.scale)
+  const translateNew = this.annigilateShift(originNew, scale)
 
   // take into account the amount by which the translation was shifted during annigilation, at the end of previous move
-  this.transforms.translate.x += this.anchor.offset.x
-  this.transforms.translate.y += this.anchor.offset.y
+  translateNew.x += this.anchor.offset.x
+  translateNew.y += this.anchor.offset.y
 
   // snapshot coordinates for use in calculateMove
   this.anchor.center = pinch.center
-  this.anchor.translate = this.transforms.translate
+  this.anchor.translate = translateNew
 
   // let users render the data
-  return this.transforms
+  return {
+    origin: originNew,
+    translate: translateNew
+  }
 }
 
 ScaleCore.prototype.calculateMove = function(pinch) {
-  // const scale = {}
-  // const translate = {}
+  const scaleNew = {}
+  const translateNew = {}
 
-  this.transforms.scale.x = this.anchor.scale.x * pinch.scale;
-  this.transforms.scale.y = this.anchor.scale.y * pinch.scale;
+  scaleNew.x = this.anchor.scale.x * pinch.scale
+  scaleNew.y = this.anchor.scale.y * pinch.scale
 
-  this.transforms.translate.x = this.anchor.translate.x + (pinch.center.x - this.anchor.center.x);
-  this.transforms.translate.y = this.anchor.translate.y + (pinch.center.y - this.anchor.center.y);
+  translateNew.x = this.anchor.translate.x + (pinch.center.x - this.anchor.center.x);
+  translateNew.y = this.anchor.translate.y + (pinch.center.y - this.anchor.center.y);
 
-  return this.transforms
+  return {
+    scale: scaleNew,
+    translate: translateNew
+  }
 }
 
-ScaleCore.prototype.calculateStop = function(pinch, vprtDims, rects) {
-  this.calculateMove(pinch)
+ScaleCore.prototype.calculateStop = function(pinch, origin, scale, translate) {
+  const calculated = this.calculateMove(pinch)
 
-  const translateCalculated = this.annigilateShift(origin, transforms)
+  const calculated.translate = this.annigilateShift(origin, scale)
 
   // anchor the scale value, to use as point of departure in next movement
-  this.anchor.scale = this.transforms.scale
-  this.anchor.offset.x = this.transforms.translate.x - translateCalculated.x
-  this.anchor.offset.y = this.transforms.translate.y - translateCalculated.y
+  this.anchor.scale = scale
+  this.anchor.offset.x = translate.x - calculated.translate.x
+  this.anchor.offset.y = translate.y - calculated.translate.y
 
-  return this.transforms
+  return calculated
 }
 
 ScaleCore.prototype.setTransformData = function(translate, scale, origin) {
