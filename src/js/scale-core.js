@@ -51,7 +51,7 @@ ScaleCore.prototype.calculateMove = function(pinch) {
 ScaleCore.prototype.calculateStop = function(pinch, origin, scale, translate) {
   const calculated = this.calculateMove(pinch)
 
-  const calculated.translate = this.annigilateShift(origin, scale)
+  const translateAnnigilated = this.annigilateShift(origin, scale)
 
   // anchor the scale value, to use as point of departure in next movement
   this.anchor.scale = scale
