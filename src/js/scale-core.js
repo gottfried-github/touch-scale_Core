@@ -55,8 +55,8 @@ ScaleCore.prototype.calculateStop = function(pinch, origin, scale, translate) {
 
   // anchor the scale value, to use as point of departure in next movement
   this.anchor.scale = scale
-  this.anchor.offset.x = translate.x - calculated.translate.x
-  this.anchor.offset.y = translate.y - calculated.translate.y
+  this.anchor.offset.x = calculated.translate.x - translateAnnigilated.x
+  this.anchor.offset.y = calculated.translate.y - translateAnnigilated.y
 
   return calculated
 }
