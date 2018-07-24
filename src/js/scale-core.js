@@ -9,81 +9,65 @@ function ScaleCore() {
   }
 }
 
-ScaleCore.prototype.initializeMovement = function(gesture, transforms, rects) {
+ScaleCore.prototype.calculateStart = function(pinch, scale, translate, rects) {
 
-  /*
-  initialize the occuring gesture:
-  */
-
-  // capture the initial coordinates of ev and el
-  this.anchor.center = gesture.center
-
-  // map ev's position to the appropriate (proper) transform-origin value (which is always in scale of 1)
   // (map ev's position onto the el's matrix)
-  const originNew = this.mapToOrigin(gesture.center, transforms, rects)
+  const originNew = this.mapToOrigin(pinch.center, scale, rects)
 
   // annigilate shifting of the element on origin change
-  const translateNew = this.annigilateShift(originNew, transforms)
+  const translateNew = this.annigilateShift(originNew, scale)
 
-  translateNew.x += this.anchor.offset.x // this.anchor.translate.x - transforms.translate.x
-  translateNew.y += this.anchor.offset.y // this.anchor.translate.y - transforms.translate.y
+  // take into account the amount by which the translation was shifted during annigilation, at the end of previous move
+  translateNew.x += this.anchor.offset.x
+  translateNew.y += this.anchor.offset.y
 
-  // const translateOffset = {
-
-  // }
-
-  // const translate = transforms.translate
-
+  // snapshot coordinates for use in calculateMove
+  this.anchor.center = pinch.center
   this.anchor.translate = translateNew
 
-  // console.log("initMovement - origin, translate, anchor", origin, translate, this.anchor)
+  // let users render the data
   return {
-    translate: translateNew, // transforms.translate,
-    origin: originNew
+    origin: originNew,
+    translate: translateNew
   }
 }
 
-// calculate a discrete point in the move
-ScaleCore.prototype.calculateDiscretePoint = function(gesture, transforms) {
-  // console.log("core, calculateDiscretePoint - gesture, transforms, anchor:", gesture, transforms, this.anchor)
-  // console.log("core, calculateDiscretePoint - translate.x, ~y:", transforms.translate.x, transforms.translate.y)
-  // console.log("core, calculateDiscretePoint - anchor.translate.x, ~y:", this.anchor.translate.x, this.anchor.translate.y)
-  const scale = {}
-  const translate = {}
+ScaleCore.prototype.calculateMove = function(pinch) {
+  const scaleNew = {}
+  const translateNew = {}
 
-  // hammer's scale starts with 0, emulate-pinch - from 1
-  scale.x = this.anchor.scale.x * gesture.scale;
-  scale.y = this.anchor.scale.y * gesture.scale;
+  scaleNew.x = this.anchor.scale.x * pinch.scale
+  scaleNew.y = this.anchor.scale.y * pinch.scale
 
-  // transforms.scaleX = this.anchor.scaleX * gesture.scale;
-  // transforms.scaleY = this.anchor.scaleY * gesture.scale;
+  translateNew.x = this.anchor.translate.x + (pinch.center.x - this.anchor.center.x);
+  translateNew.y = this.anchor.translate.y + (pinch.center.y - this.anchor.center.y);
 
-  translate.x = this.anchor.translate.x + (gesture.center.x - this.anchor.center.x);
-  translate.y = this.anchor.translate.y + (gesture.center.y - this.anchor.center.y);
-
-  // console.log("core, calculateDiscretePoint - translate:", translate)
   return {
-    scale: scale,
-    translate: translate
+    scale: scaleNew,
+    translate: translateNew
   }
 }
 
-ScaleCore.prototype.finishMovement = function(gesture, transforms, origin) {
+ScaleCore.prototype.calculateStop = function(pinch, origin, scale, translate) {
+  const calculated = this.calculateMove(pinch)
 
-  const transformsNew = this.calculateDiscretePoint(gesture, transforms)
+  const calculated.translate = this.annigilateShift(origin, scale)
 
   // anchor the scale value, to use as point of departure in next movement
-  this.anchor.scale = transformsNew.scale
+  this.anchor.scale = scale
+  this.anchor.offset.x = translate.x - calculated.translate.x
+  this.anchor.offset.y = translate.y - calculated.translate.y
 
-  const translateCalculated = this.annigilateShift(origin, transforms)
-
-  this.anchor.offset.x = transformsNew.translate.x - translateCalculated.x
-  this.anchor.offset.y = transformsNew.translate.y - translateCalculated.y
-
-  return transformsNew
+  return calculated
 }
 
-ScaleCore.prototype.mapToOrigin = function(gestureCenter, transforms, rects) {
+ScaleCore.prototype.setTransformData = function(translate, scale, origin) {
+  if (translate) this.crds.translate = translate
+  if (scale) this.crds.scale = scale
+  if (origin) this.crds.origin = origin
+}
+
+ScaleCore.prototype.mapToOrigin = function(gestureCenter, scale, rects) {
   // determine point's position, relative to the scalable element
   const pointPosWithinEl = {
     left: gestureCenter.x - rects.left,
@@ -92,22 +76,22 @@ ScaleCore.prototype.mapToOrigin = function(gestureCenter, transforms, rects) {
 
   // map point's position to the appropriate (proper) transform-origin value (which is always in scale of 1)
   const origin = {
-    x: pointPosWithinEl.left / transforms.scale.x,
-    y: pointPosWithinEl.top / transforms.scale.y
+    x: pointPosWithinEl.left / scale.x,
+    y: pointPosWithinEl.top / scale.y
   }
 
   return origin
 }
 
-ScaleCore.prototype.annigilateShift = function(origin, transforms) {
+ScaleCore.prototype.annigilateShift = function(origin, scale) {
 
   // 150 is (if I recall it right) half of the element's size (no idea why that
   // needs or needs not to be the case)
 
   // in fact, 150 is full size of the element
   const translate = {
-    x: ((origin.x - 50) * transforms.scale.x - (origin.x - 50)), //  + transforms.offset.x
-    y: ((origin.y - 50) * transforms.scale.y - (origin.y - 50)) //  + transforms.offset.y
+    x: ((origin.x - 50) * scale.x - (origin.x - 50)), //  + transforms.offset.x
+    y: ((origin.y - 50) * scale.y - (origin.y - 50)) //  + transforms.offset.y
   }
 
   return translate
@@ -178,11 +162,74 @@ ScaleCore.prototype.encounterBounds = function(transforms, rects, parent) {
 export {ScaleCore}
 
 /*
-const ScaleCore = {
-  expose: function() {
-    return ScaleCoreCapsule()
+
+ScaleCore.prototype.initializeMovement = function(gesture, transforms, rects) {
+
+  // capture the initial coordinates of ev and el
+  this.anchor.center = gesture.center
+
+  // map ev's position to the appropriate (proper) transform-origin value (which is always in scale of 1)
+  // (map ev's position onto the el's matrix)
+  const originNew = this.mapToOrigin(gesture.center, transforms, rects)
+
+  // annigilate shifting of the element on origin change
+  const translateNew = this.annigilateShift(originNew, transforms)
+
+  translateNew.x += this.anchor.offset.x // this.anchor.translate.x - transforms.translate.x
+  translateNew.y += this.anchor.offset.y // this.anchor.translate.y - transforms.translate.y
+
+  // const translateOffset = {
+
+  // }
+
+  // const translate = transforms.translate
+
+  this.anchor.translate = translateNew
+
+  // console.log("initMovement - origin, translate, anchor", origin, translate, this.anchor)
+  return {
+    translate: translateNew, // transforms.translate,
+    origin: originNew
   }
 }
 
-// export {ScaleCoreCapsule}
+// calculate a discrete point in the move
+ScaleCore.prototype.calculateDiscretePoint = function(gesture, transforms) {
+  // console.log("core, calculateDiscretePoint - gesture, transforms, anchor:", gesture, transforms, this.anchor)
+  // console.log("core, calculateDiscretePoint - translate.x, ~y:", transforms.translate.x, transforms.translate.y)
+  // console.log("core, calculateDiscretePoint - anchor.translate.x, ~y:", this.anchor.translate.x, this.anchor.translate.y)
+  const scale = {}
+  const translate = {}
+
+  // hammer's scale starts with 0, emulate-pinch - from 1
+  scale.x = this.anchor.scale.x * gesture.scale;
+  scale.y = this.anchor.scale.y * gesture.scale;
+
+  // transforms.scaleX = this.anchor.scaleX * gesture.scale;
+  // transforms.scaleY = this.anchor.scaleY * gesture.scale;
+
+  translate.x = this.anchor.translate.x + (gesture.center.x - this.anchor.center.x);
+  translate.y = this.anchor.translate.y + (gesture.center.y - this.anchor.center.y);
+
+  // console.log("core, calculateDiscretePoint - translate:", translate)
+  return {
+    scale: scale,
+    translate: translate
+  }
+}
+
+ScaleCore.prototype.finishMovement = function(gesture, transforms, origin) {
+
+  const transformsNew = this.calculateDiscretePoint(gesture, transforms)
+
+  // anchor the scale value, to use as point of departure in next movement
+  this.anchor.scale = transformsNew.scale
+
+  const translateCalculated = this.annigilateShift(origin, transforms)
+
+  this.anchor.offset.x = transformsNew.translate.x - translateCalculated.x
+  this.anchor.offset.y = transformsNew.translate.y - translateCalculated.y
+
+  return transformsNew
+}
 */
