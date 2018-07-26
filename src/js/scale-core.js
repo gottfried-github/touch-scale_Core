@@ -9,6 +9,12 @@ function ScaleCore() {
   }
 }
 
+/**
+  @param {Object} pinch {center: {x: Number, y: Number}, scale: Number}
+  @param {Object} scale {x: Number, y: Number}
+  @param {Object} translate {x: Number, y: Number}
+  @param {DOMRect} rects i.e., the return value of getBoundingClientRect, called on an element
+*/
 ScaleCore.prototype.calculateStart = function(pinch, scale, translate, rects) {
 
   // (map ev's position onto the el's matrix)
