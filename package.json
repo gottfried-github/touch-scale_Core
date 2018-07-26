@@ -1,6 +1,6 @@
 {
   "name": "scalejs",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "a simple module form scaling dom elements",
   "main": "src/scale.js",
   "repository": "/",
