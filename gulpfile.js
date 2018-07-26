@@ -7,14 +7,14 @@ const sass = require("gulp-sass")
 gulp.task("build-dist-js", function() {
   return gulp
     .src([
-      "./src/js/imports.js",
-      "./src/js/libs/*.js",
+      // "./src/js/imports.js",
+      // "./src/js/libs/*.js",
       // "./src/libs/getViewport.js",
       "./src/js/scale-core.js",
-      "./src/js/scale-dom-io.js",
-      "./src/js/scale.js",
+      // "./src/js/scale-dom-io.js",
+      // "./src/js/scale.js",
     ])
-    .pipe(concat("scale.js"))
+    .pipe(concat("scale-core.js"))
     .pipe(gulp.dest("./dist/"))
 })
 
