@@ -15,7 +15,7 @@ ScaleCore.prototype.calculateStart = function(pinch, scale, translate, rects) {
   const originNew = this.mapToOrigin(pinch.center, scale, rects)
 
   // annigilate shifting of the element on origin change
-  const translateNew = this.annigilateShift(originNew, scale)
+  const translateNew = this.annigilateShift(originNew, scale, rects)
 
   // take into account the amount by which the translation was shifted during annigilation, at the end of previous move
   translateNew.x += this.anchor.offset.x
@@ -48,10 +48,10 @@ ScaleCore.prototype.calculateMove = function(pinch) {
   }
 }
 
-ScaleCore.prototype.calculateStop = function(pinch, origin, scale, translate) {
+ScaleCore.prototype.calculateStop = function(pinch, origin, scale, translate, rects) {
   const calculated = this.calculateMove(pinch)
 
-  const translateAnnigilated = this.annigilateShift(origin, scale)
+  const translateAnnigilated = this.annigilateShift(origin, scale, rects)
 
   // anchor the scale value, to use as point of departure in next movement
   this.anchor.scale = scale
@@ -83,15 +83,14 @@ ScaleCore.prototype.mapToOrigin = function(gestureCenter, scale, rects) {
   return origin
 }
 
-ScaleCore.prototype.annigilateShift = function(origin, scale) {
+ScaleCore.prototype.annigilateShift = function(origin, scale, rects) {
 
-  // 150 is (if I recall it right) half of the element's size (no idea why that
-  // needs or needs not to be the case)
+  const quarterX = rects.width / 4
+  const quarterY = rects.height / 4
 
-  // in fact, 150 is full size of the element
   const translate = {
-    x: ((origin.x - 50) * scale.x - (origin.x - 50)), //  + transforms.offset.x
-    y: ((origin.y - 50) * scale.y - (origin.y - 50)) //  + transforms.offset.y
+    x: ((origin.x - quarterX) * scale.x - (origin.x - quarterX)), //  + transforms.offset.x
+    y: ((origin.y - quarterY) * scale.y - (origin.y - quarterY)) //  + transforms.offset.y
   }
 
   return translate
