@@ -1,56 +1,18 @@
-The Scale module is abstracted away from any particular touch event library, although it is inspired by the hammer pinch event. I tried to slice the whole thing into real core stuff:
-  * the very calculations, needed to map the gesture onto element's movement are separated from dealing with the dom.
+## Touch Scale - **Core**
+Module for scaling an element, based on a pinch gesture - of the form `{center: {x, y}, scale: 1.3}`. Touch gesture library agnostic.
 
+**What it doesn't do:**
+  * Doesn't interact with the DOM
+  * Doesn't implement animation
+  * Doesn't convert transformation data to position and dimensions
 
-A simple, (extensible) module for scaling dom elements.
+**What it does do:**
+  * Calculates new values for given transform data - including origin -, based on the pinch data. *note:* it calculates translation for a scaled element to stay in it's actual position when it's origin gets changed
 
-# Features:
-  * Scales the element.
-  * Fits the element inside the viewport.
+## Usage:
+  * Just to demonstrate, what it's about, [here's a code demo](https://github.com/spti/scale-core/blob/master/usage.md). It doesn't render anything, though, neither does it use `rAf`.
 
-# Usage:
+  * Here is a [working prototype]()
 
-## initialize:
-```javascript
-  const el = document.querySelector('#scalable')
-  const scale = new Scale(el, options)
-  scale.scaleUp()
-```
-
-## options:
-```javascript
-const options = {
-  beforeScale: function() {console.log("scaling finished")},
-  afterScale: function() {console.log("scaling finished")},
-  transitionClass: "my-custom-transition-class", // be careful with overriding the default here - you should be aware of specificity.
-}
-```
-
-## styles:
-
-  If you use sass, then, in your file:
-
-```css
-  @import 'node_modules/scale/dist/container';
-  @import 'node_modules/scale/dist/element';
-
-  .my-custom-container-class {
-    @include container();
-
-    /* my custom styles*/
-  }
-
-  .my-custom-element-class {
-    @include element();
-
-    /* my custom styles*/
-  }
-
-  .my-custom-element-class.my-custom-transition-class {
-    /* your transition code */
-  }
-```
-
-  * If you want to use your own styles, there's things to keep in mind:
-    * the element should be centered via `flexbox` container's `justify-content` and `align-items` - not with `margin: auto`.
-    * be aware of specificity, when defining your transition class - better have it attached to the class of the element (i.e. `.scalable.scale-transition`)
+## note on styles:
+  In the current setup, the element is centered - specifically, via `flexbox` container's `justify-content` and `align-items`, and not with `margin: auto`. See sass partials in `src/css/`
