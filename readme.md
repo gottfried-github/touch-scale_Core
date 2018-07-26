@@ -9,6 +9,7 @@ Module for scaling an element, based on a pinch gesture - of the form `{center: 
 **What it does do:**
   * Calculates new values for given transform data - including origin -, based on the pinch data. *note:* it calculates translation for a scaled element to stay in it's actual position when it's origin gets changed
 
+
 ## Usage:
   * Just to demonstrate, what it's about, [here's a code demo](https://github.com/spti/scale-core/blob/master/usage.md). It doesn't render anything, though, neither does it use `rAf`.
 
