@@ -11,7 +11,7 @@ Module for scaling an element, based on a pinch gesture - of the form `{center: 
 
 
 ## Usage:
-  * Just to demonstrate, what it's about, [here's a code demo](https://github.com/spti/scale-core/blob/master/usage.md). It doesn't render anything, though, neither does it use `rAf`.
+  * Just to demonstrate, what it's about, [here's a code demo](https://github.com/spti/scale-core/blob/release/0.2/usage.md). It doesn't render anything, though, neither does it use `rAf`.
 
   * Here is a [working prototype]()
 
