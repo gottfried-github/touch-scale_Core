@@ -1,8 +1,8 @@
 {
-  "name": "scalejs",
+  "name": "scale-core",
   "version": "0.1.0",
   "description": "a simple module form scaling dom elements",
-  "main": "src/scale.js",
+  "main": "dist/scale-core.js",
   "repository": "/",
   "scripts": {
     "build-test": "gulp build && gulp build-test && webpack --config webpack.config.js",
