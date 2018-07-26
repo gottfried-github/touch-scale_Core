@@ -1,19 +1,19 @@
 A simple, (extensible) module for scaling dom elements.
 
-# Features:
+## Features:
   * Scales the element.
   * Fits the element inside the viewport.
 
-# Usage:
+## Usage:
 
-## initialize:
+### initialize:
 ```javascript
   const el = document.querySelector('#scalable')
   const scale = new Scale(el, options)
   scale.scaleUp()
 ```
 
-## options:
+### options:
 ```javascript
 const options = {
   beforeScale: function() {console.log("scaling finished")},
@@ -22,31 +22,55 @@ const options = {
 }
 ```
 
-## styles:
+### styles:
 
-  If you use sass, then, in your file:
+If you use sass, then, in your file:
 
 ```css
-  @import 'node_modules/scale/dist/container';
-  @import 'node_modules/scale/dist/element';
+@import 'node_modules/touch-scale_core/dist/container';
+@import 'node_modules/touch-scale_core/dist/element';
 
-  .my-custom-container-class {
-    @include container();
+.my-container {
+  @include container();
 
-    /* my custom styles*/
-  }
+  /* my custom styles*/
+}
 
-  .my-custom-element-class {
-    @include element();
+.my-scalable-element {
+  @include element();
 
-    /* my custom styles*/
-  }
-
-  .my-custom-element-class.my-custom-transition-class {
-    /* your transition code */
-  }
+  /* my custom styles*/
+}
 ```
 
-  * If you want to use your own styles, there's things to keep in mind:
-    * the element should be centered via `flexbox` container's `justify-content` and `align-items` - not with `margin: auto`.
-    * be aware of specificity, when defining your transition class - better have it attached to the class of the element (i.e. `.scalable.scale-transition`)
+If you don't use sass, then add this to your container and element:
+
+```css
+.my-container {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+
+  /* my custom styles */  
+}
+
+.my-scalable-element {
+  position: relative;
+  flex-shrink: 0;
+  flex-grow: 0;
+
+  /* my custom styles */
+}
+```
+
+Animation (**note** the specificity - the transition class is attached to the element selector):
+
+```css
+.my-scalable-element.my-transition-class {
+  /*
+  your transition code, e.g.:
+  transition: transform 700ms ease-in;
+
+  */
+}
+```
