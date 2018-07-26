@@ -10,11 +10,11 @@ gulp.task("build-dist-js", function() {
       // "./src/js/imports.js",
       // "./src/js/libs/*.js",
       // "./src/libs/getViewport.js",
-      "./src/js/scale-core.js",
+      "./src/js/touch-scale_core.js",
       // "./src/js/scale-dom-io.js",
       // "./src/js/scale.js",
     ])
-    .pipe(concat("scale-core.js"))
+    .pipe(concat("touch-scale_core.js"))
     .pipe(gulp.dest("./dist/"))
 })
 

@@ -1,8 +1,8 @@
 {
-  "name": "scale-core",
+  "name": "touch-scale_core",
   "version": "0.1.0",
   "description": "a simple module form scaling dom elements",
-  "main": "dist/scale-core.js",
+  "main": "dist/touch-scale_core.js",
   "repository": "/",
   "scripts": {
     "build-test": "gulp build && gulp build-test && webpack --config webpack.config.js",
